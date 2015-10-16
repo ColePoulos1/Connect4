@@ -63,13 +63,15 @@ public class BoardGame extends JFrame implements Runnable  {
                             {
                                 if(board[yepc][yepr] == null)
                                 {
+                                    currentc = yepc;
+                                    currentr = yepr;
+                                    
                                     if(turnnum % 2 == 1)
                                     board[yepc][yepr] = new Piece(Color.RED);
                                     if(turnnum % 2 == 0)
                                     board[yepc][yepr] = new Piece(Color.BLACK);
                                     turnnum++;
-                                    currentc = yepc;
-                                    currentr = yepr;
+                                    
                                     break;
                                 }
                             }
@@ -309,8 +311,43 @@ public class BoardGame extends JFrame implements Runnable  {
                     whowon = 1;
             }
         }
-       //diagonal wins
-       
+       //diagonal down right wins
+        {
+        int startcol = currentc -3;
+            if(startcol<0)
+                startcol = 0;
+        int startrow = currentr - 3;
+            if(startrow < 0)
+                startrow = 0;
+        int endcol = currentc + 3;
+            if(endcol > numColumns-1)
+                endcol = numColumns-1;
+        int endrow = currentr + 3;
+            if(endrow > numRows-1)
+                endrow = numRows-1;
+            
+        int piececount = 0;
+        
+            while(startcol <= endcol && startrow <= endrow)
+            {
+                if(board[startcol][startrow] == null || board[startcol][startrow].getColor() != board[currentc][currentr].getColor())
+                    piececount = 0;
+                else
+                {
+                    piececount++;
+                    if(board[currentc][currentr].getColor() == Color.RED && piececount == 4)
+                    {
+                            whowon = 1;
+                    }
+                    else if(board[currentc][currentr].getColor() == Color.BLACK && piececount == 4)
+                    {
+                            whowon = 2;
+                    }
+                }
+                startcol++;
+                startrow++;
+            } 
+        }
     }
 
 ////////////////////////////////////////////////////////////////////////////
