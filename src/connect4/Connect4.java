@@ -4,12 +4,13 @@
  */
 package connect4;
 
-
 import java.io.*;
+import javax.sound.sampled.*;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.io.File;
 
 public class Connect4 extends JFrame implements Runnable {
     static final int XBORDER = 20;
@@ -24,7 +25,7 @@ public class Connect4 extends JFrame implements Runnable {
     Image image;
     Graphics2D g;
     
-    int connectHowMany = 8;
+    int connectHowMany = 4;
 
     final int numRows = 8;
     final int numColumns = 8;
@@ -46,6 +47,15 @@ public class Connect4 extends JFrame implements Runnable {
     }
     WinDirection winDirection;    
     int piecesOnBoard;
+    
+    Image trumpHead;
+    Image hillaryHead;
+    Image wall;
+    int wallxsize;
+    int wallysize;
+    int wallstartx;
+    int wallstarty;
+    
     
     static Connect4 frame1;
     public static void main(String[] args) {
@@ -192,22 +202,29 @@ public class Connect4 extends JFrame implements Runnable {
         {
             for (int zcolumn=0;zcolumn<numColumns;zcolumn++)
             {
-                if (board[zrow][zcolumn] != null)
+                if (board[zrow][zcolumn] != null && board[zrow][zcolumn].getColor() == Color.RED)
                 {
-                    g.setColor(board[zrow][zcolumn].getColor());
-                    g.fillOval(getX(0)+zcolumn*getWidth2()/numColumns,
-                    getY(0)+zrow*getHeight2()/numRows,
-                    getWidth2()/numColumns,
-                    getHeight2()/numRows);
+                    drawHead(trumpHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                    getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                    numColumns/8,
+                    numRows/8);
+                }
+                if (board[zrow][zcolumn] != null && board[zrow][zcolumn].getColor() == Color.BLACK)
+                {
+                    drawHead(hillaryHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                    getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                    numColumns/8,
+                    numRows/8);
                 }
             }
         }
     
         if (winState == WinState.PlayerOne)
         {
-            g.setColor(Color.gray);
-            g.setFont(new Font("Monospaced",Font.BOLD,40) );
-            g.drawString("Player 1 has won.", 50, 200);            
+            drawHead(wall,getX(0)+wallstartx*getWidth2()/numColumns -getWidth2()/numColumns -2,
+                    getY(0)+wallstarty*getHeight2()/numRows + getHeight2()/numRows/2 +1,0,
+                    wallxsize,
+                    wallysize);           
         }
         else if (winState == WinState.PlayerTwo)
         {
@@ -225,7 +242,25 @@ public class Connect4 extends JFrame implements Runnable {
         gOld.drawImage(image, 0, 0, null);
     }
 
+   public void drawHead(Image image,int xpos,int ypos,double rot,double xscale,
+            double yscale) {
+        int width;
+        int height;
+           
+        width = trumpHead.getWidth(this);
+        height = trumpHead.getHeight(this);
+        
+        g.translate(xpos,ypos);
+        g.rotate(rot  * Math.PI/180.0);
+        g.scale( xscale , yscale );
 
+        g.drawImage(image,-width/2,-height/2,
+        width,height,this);
+
+        g.scale( 1.0/xscale,1.0/yscale );
+        g.rotate(-rot  * Math.PI/180.0);
+        g.translate(-xpos,-ypos);
+    }
 ////////////////////////////////////////////////////////////////////////////
 // needed for     implement runnable
     public void run() {
@@ -264,7 +299,10 @@ public class Connect4 extends JFrame implements Runnable {
                 xsize = getSize().width;
                 ysize = getSize().height;
             }
-
+            readFile();
+            trumpHead = Toolkit.getDefaultToolkit().getImage("./trump.png");
+            hillaryHead = Toolkit.getDefaultToolkit().getImage("./hillary.png");
+            wall = Toolkit.getDefaultToolkit().getImage("./wall.png");
             reset();
         }
         
@@ -303,7 +341,13 @@ public class Connect4 extends JFrame implements Runnable {
         if (numMatch == connectHowMany)
         {
             if (board[currentRow][currentColumn].getColor() == Color.red)
+            {
                 winState = WinState.PlayerOne;
+                wallxsize = connectHowMany;
+                wallysize = 1;
+                wallstarty = currentRow;
+                wallstartx = currentColumn;
+            }
             else
                 winState = WinState.PlayerTwo;
             {
@@ -510,5 +554,68 @@ public class Connect4 extends JFrame implements Runnable {
 
     public int getHeight2() {
         return (ysize - 2 * YBORDER - WINDOW_BORDER - YTITLE);
+    }
+    public void readFile() {
+        try {
+            String inputfile = "info.txt";
+            BufferedReader in = new BufferedReader(new FileReader(inputfile));
+            String line = in.readLine();
+            while (line != null) {
+                String newLine = line.toLowerCase();
+//                if (newLine.startsWith("numstars"))
+//                {
+//                    String numStarsString = newLine.substring(9);
+//                    numstars = Integer.parseInt(numStarsString.trim());
+//                }
+//                if (newLine.startsWith("nummissiles"))
+//                {
+//                    String numStarsString = newLine.substring(12);
+//                    Missile.num = Integer.parseInt(numStarsString.trim());
+//                }
+                
+                line = in.readLine();
+            }
+            in.close();
+        } catch (IOException ioe) {
+        }
+    }
+}
+class sound implements Runnable {
+    Thread myThread;
+    File soundFile;
+    public boolean donePlaying = false;
+    sound(String _name)
+    {
+        soundFile = new File(_name);
+        myThread = new Thread(this);
+        myThread.start();
+    }
+    public void run()
+    {
+        try {
+        AudioInputStream ais = AudioSystem.getAudioInputStream(soundFile);
+        AudioFormat format = ais.getFormat();
+    //    System.out.println("Format: " + format);
+        DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
+        SourceDataLine source = (SourceDataLine) AudioSystem.getLine(info);
+        source.open(format);
+        source.start();
+        int read = 0;
+        byte[] audioData = new byte[16384];
+        while (read > -1){
+            read = ais.read(audioData,0,audioData.length);
+            if (read >= 0) {
+                source.write(audioData,0,read);
+            }
+        }
+        donePlaying = true;
+
+        source.drain();
+        source.close();
+        }
+        catch (Exception exc) {
+            System.out.println("error: " + exc.getMessage());
+            exc.printStackTrace();
+        }
     }
 }
