@@ -55,7 +55,10 @@ public class Connect4 extends JFrame implements Runnable {
     int wallysize;
     int wallstartx;
     int wallstarty;
+    int wallrot;
     
+    Color themecol;
+    int timecount;
     
     static Connect4 frame1;
     public static void main(String[] args) {
@@ -166,7 +169,11 @@ public class Connect4 extends JFrame implements Runnable {
         }
 
 //fill background
-        g.setColor(Color.pink);
+        if (winState == WinState.PlayerOne)
+            themecol=Color.RED;
+        else if (winState == WinState.PlayerTwo)
+            themecol = Color.BLUE;
+        g.setColor(themecol);
 
         g.fillRect(0, 0, xsize, ysize);
 
@@ -221,10 +228,18 @@ public class Connect4 extends JFrame implements Runnable {
     
         if (winState == WinState.PlayerOne)
         {
-            drawHead(wall,getX(0)+wallstartx*getWidth2()/numColumns -getWidth2()/numColumns -2,
-                    getY(0)+wallstarty*getHeight2()/numRows + getHeight2()/numRows/2 +1,0,
+            if(wallrot== 0)
+            drawHead(wall,getX(0)+wallstartx*getWidth2()/numColumns + connectHowMany*(getWidth2()/numColumns/2) - (connectHowMany-1)*(getWidth2()/numColumns),
+                    getY(0)+wallstarty*getHeight2()/numRows + getHeight2()/numRows/2 +1,wallrot,
                     wallxsize,
-                    wallysize);           
+                    wallysize); 
+            
+            else
+            drawHead(wall,getX(0)+wallstartx*getWidth2()/numColumns + connectHowMany*(getWidth2()/numColumns/2) - (connectHowMany-1)*(getWidth2()/numColumns),
+                    getY(0)+wallstarty*getHeight2()/numRows + getHeight2()/numRows/2 +25,wallrot,
+                    wallxsize,
+                    wallysize);  
+            themecol=Color.RED;
         }
         else if (winState == WinState.PlayerTwo)
         {
@@ -289,6 +304,7 @@ public class Connect4 extends JFrame implements Runnable {
         moveHappened = false;
         winState = WinState.None;
         piecesOnBoard = 0;
+        timecount = 0;
     }
 /////////////////////////////////////////////////////////////////////////
     public void animate() {
@@ -305,7 +321,13 @@ public class Connect4 extends JFrame implements Runnable {
             wall = Toolkit.getDefaultToolkit().getImage("./wall.png");
             reset();
         }
-        
+        timecount++;
+        if(timecount<=25)
+            themecol = Color.RED;
+        else if(timecount<=50)
+            themecol = Color.BLUE;
+        else
+            timecount = 0;
         
         if (moveHappened)
         {
@@ -345,8 +367,9 @@ public class Connect4 extends JFrame implements Runnable {
                 winState = WinState.PlayerOne;
                 wallxsize = connectHowMany;
                 wallysize = 1;
-                wallstarty = currentRow;
-                wallstartx = currentColumn;
+                wallstarty = winRow;
+                wallstartx = winColumn + (connectHowMany-1);
+                wallrot = 0;
             }
             else
                 winState = WinState.PlayerTwo;
@@ -382,7 +405,10 @@ public class Connect4 extends JFrame implements Runnable {
         if (numMatch == connectHowMany)
         {
             if (board[currentRow][currentColumn].getColor() == Color.red)
-                winState = WinState.PlayerOne;
+            {
+            winState = WinState.PlayerOne;
+            
+            }
             else
                 winState = WinState.PlayerTwo;
             {
@@ -442,7 +468,14 @@ public class Connect4 extends JFrame implements Runnable {
         if (numMatch == connectHowMany)
         {
             if (board[currentRow][currentColumn].getColor() == Color.red)
+            {
                 winState = WinState.PlayerOne;
+                wallxsize = connectHowMany + (connectHowMany/3);
+                wallysize = 1;
+                wallstarty = winRow + (connectHowMany-3);
+                wallstartx = winColumn + (connectHowMany-1);
+                wallrot = 45;
+            }
             else
                 winState = WinState.PlayerTwo;
             {
@@ -504,7 +537,14 @@ public class Connect4 extends JFrame implements Runnable {
         if (numMatch == connectHowMany)
         {
             if (board[currentRow][currentColumn].getColor() == Color.red)
+            {
                 winState = WinState.PlayerOne;
+                wallxsize = connectHowMany + (connectHowMany/3);
+                wallysize = 1;
+                wallstarty = currentRow+1;
+                wallstartx = currentColumn;
+                wallrot = -45;
+            }
             else
                 winState = WinState.PlayerTwo;
             {
