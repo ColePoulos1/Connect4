@@ -59,6 +59,8 @@ public class Connect4 extends JFrame implements Runnable {
     
     Color themecol;
     int timecount;
+    int fallingHeady;
+    int fallingHeadx;
     
     static Connect4 frame1;
     public static void main(String[] args) {
@@ -103,10 +105,10 @@ public class Connect4 extends JFrame implements Runnable {
                         piecesOnBoard++;
                     }
                 }
-                if (e.BUTTON3 == e.getButton()) {
-                    //right button
-                    reset();
-                }
+//                if (e.BUTTON3 == e.getButton()) {
+//                    //right button
+//                    reset();
+//                }
                 repaint();
             }
         });
@@ -126,8 +128,9 @@ public class Connect4 extends JFrame implements Runnable {
         addKeyListener(new KeyAdapter() {
 
             public void keyPressed(KeyEvent e) {
-                if (e.VK_RIGHT == e.getKeyCode())
+                if (e.VK_ESCAPE == e.getKeyCode())
                 {
+                    reset();
                 }
                 if (e.VK_LEFT == e.getKeyCode())
                 {
@@ -211,17 +214,43 @@ public class Connect4 extends JFrame implements Runnable {
             {
                 if (board[zrow][zcolumn] != null && board[zrow][zcolumn].getColor() == Color.RED)
                 {
-                    drawHead(trumpHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
-                    getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
-                    numColumns/8,
-                    numRows/8);
+                    if(moveHappened == false)
+                        drawHead(trumpHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                        numColumns/8,
+                        numRows/8);
+                    else if(moveHappened && zcolumn == currentColumn && zrow == currentRow)
+                        drawHead(trumpHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        fallingHeady,0,
+                        numColumns/8,
+                        numRows/8); 
+                    else if(moveHappened)
+                        drawHead(trumpHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                        numColumns/8,
+                        numRows/8); 
+//                    g.setColor(Color.red);
+//                    int xvals[] = {getX(0)+zcolumn*getWidth2()/numColumns, getX(0)+zcolumn*getWidth2()/numColumns, getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns};
+//                    int yvals[] = {getY(0)+zrow*getHeight2()/numRows, getY(0)+zrow*getHeight2()/numRows + getWidth2()/numColumns, getY(0)+zrow*getHeight2()/numRows + getWidth2()/numColumns};
+//                    g.fillPolygon(xvals, yvals, xvals.length);
                 }
                 if (board[zrow][zcolumn] != null && board[zrow][zcolumn].getColor() == Color.BLACK)
                 {
-                    drawHead(hillaryHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
-                    getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
-                    numColumns/8,
-                    numRows/8);
+                    if(moveHappened == false)
+                        drawHead(hillaryHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                        numColumns/8,
+                        numRows/8);
+                    else if(moveHappened && zcolumn == currentColumn && zrow == currentRow)
+                        drawHead(hillaryHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        fallingHeady,0,
+                        numColumns/8,
+                        numRows/8); 
+                    else if(moveHappened)
+                        drawHead(hillaryHead,getX(0)+zcolumn*getWidth2()/numColumns +getWidth2()/numColumns/2 ,
+                        getY(0)+zrow*getHeight2()/numRows + getHeight2()/numRows/2,0,
+                        numColumns/8,
+                        numRows/8); 
                 }
             }
         }
@@ -234,18 +263,22 @@ public class Connect4 extends JFrame implements Runnable {
                     wallxsize,
                     wallysize); 
             
-            else
+            else if(wallrot != 360)
             drawHead(wall,getX(0)+wallstartx*getWidth2()/numColumns + connectHowMany*(getWidth2()/numColumns/2) - (connectHowMany-1)*(getWidth2()/numColumns),
                     getY(0)+wallstarty*getHeight2()/numRows + getHeight2()/numRows/2 +25,wallrot,
                     wallxsize,
-                    wallysize);  
+                    wallysize); 
+            else
+                g.setColor(Color.gray);
+                g.setFont(new Font("Monospaced",Font.BOLD,40) );
+                g.drawString("Trump has won.", 140, 200);
             themecol=Color.RED;
         }
         else if (winState == WinState.PlayerTwo)
         {
             g.setColor(Color.gray);
             g.setFont(new Font("Monospaced",Font.BOLD,40) );
-            g.drawString("Player 2 has won.", 50, 200);            
+            g.drawString("Hillary has won.", 50, 200);            
         }
         else if (winState == WinState.Tie)
         {
@@ -253,7 +286,7 @@ public class Connect4 extends JFrame implements Runnable {
             g.setFont(new Font("Monospaced",Font.BOLD,40) );
             g.drawString("It is a tie.", 50, 200);            
         }
-
+ 
         gOld.drawImage(image, 0, 0, null);
     }
 
@@ -305,6 +338,14 @@ public class Connect4 extends JFrame implements Runnable {
         winState = WinState.None;
         piecesOnBoard = 0;
         timecount = 0;
+        wallxsize = 0;
+        wallysize = 0;
+        wallstartx = 0;
+        wallstarty = 0;
+        wallrot = 360;
+        
+        fallingHeady = getY(0);
+        
     }
 /////////////////////////////////////////////////////////////////////////
     public void animate() {
@@ -331,9 +372,15 @@ public class Connect4 extends JFrame implements Runnable {
         
         if (moveHappened)
         {
-            moveHappened = false;
-            checkWin();
+            fallingHeadx = currentColumn;
+            fallingHeady +=15;
+            if(fallingHeady >= getY(0)+currentRow*getHeight2()/numRows + getHeight2()/numRows/2)
+            {
+                fallingHeady = getY(0);
+                moveHappened = false;
+            }
         }
+        checkWin();
     }
 ////////////////////////////////////////////////////////////////////////////
     public boolean checkWin() {
@@ -371,7 +418,7 @@ public class Connect4 extends JFrame implements Runnable {
                 wallstartx = winColumn + (connectHowMany-1);
                 wallrot = 0;
             }
-            else
+            else if (board[currentRow][currentColumn].getColor() == Color.black)
                 winState = WinState.PlayerTwo;
             {
                 for(int howm = 0; howm<connectHowMany;howm++)
@@ -409,12 +456,8 @@ public class Connect4 extends JFrame implements Runnable {
             winState = WinState.PlayerOne;
             
             }
-            else
-                winState = WinState.PlayerTwo;
-            {
-                for(int howm = 0; howm<connectHowMany;howm++)
-                    board[winRow+howm][winColumn].setColor(Color.green);
-            }             
+            else if (board[currentRow][currentColumn].getColor() == Color.black)
+                winState = WinState.PlayerTwo;             
             return (true);
         }        
 //check diagonal right down.
@@ -476,7 +519,7 @@ public class Connect4 extends JFrame implements Runnable {
                 wallstartx = winColumn + (connectHowMany-1);
                 wallrot = 45;
             }
-            else
+            else if (board[currentRow][currentColumn].getColor() == Color.black)
                 winState = WinState.PlayerTwo;
             {
                 for(int howm = 0; howm<connectHowMany;howm++)
@@ -545,7 +588,7 @@ public class Connect4 extends JFrame implements Runnable {
                 wallstartx = currentColumn;
                 wallrot = -45;
             }
-            else
+            else if (board[currentRow][currentColumn].getColor() == Color.black)
                 winState = WinState.PlayerTwo;
             {
                 for(int howm = 0; howm<connectHowMany;howm++)
